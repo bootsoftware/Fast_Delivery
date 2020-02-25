@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "246236117513",
+    "firebase_url": "https://fast-delivery-d463d.firebaseio.com",
+    "project_id": "fast-delivery-d463d",
+    "storage_bucket": "fast-delivery-d463d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:246236117513:android:09f7b3b28954a4948596d8",
+        "android_client_info": {
+          "package_name": "br.com.fast.fast_delivery"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "246236117513-7g88ko7uq76oqnc0ge0c9is53iitrhh9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.fast.fast_delivery",
+            "certificate_hash": "a341974d36a616f6d617b90f9a9aa0ab3b06b861"
+          }
+        },
+        {
+          "client_id": "246236117513-6a6eclha3fpb82fm4sdj0copb1ai739t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB6-IeIBT7UG08di8hjn7ammKU7I2PaYWQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "246236117513-6a6eclha3fpb82fm4sdj0copb1ai739t.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
