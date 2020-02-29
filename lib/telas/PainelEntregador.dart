@@ -6,12 +6,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fast_delivery/util/StatusRequisicao.dart';
 import 'package:fast_delivery/util/UsuarioFirebase.dart';
 
-class PainelMotorista extends StatefulWidget {
+class PainelEntregador extends StatefulWidget {
   @override
-  _PainelMotoristaState createState() => _PainelMotoristaState();
+  _PainelEntregadorState createState() => _PainelEntregadorState();
 }
 
-class _PainelMotoristaState extends State<PainelMotorista> {
+class _PainelEntregadorState extends State<PainelEntregador> {
 
   List<String> itensMenu = [
     "Configurações", "Deslogar"
@@ -116,7 +116,7 @@ class _PainelMotoristaState extends State<PainelMotorista> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Painel motorista"),
+        title: Text("Painel Entregador"),
         actions: <Widget>[
           PopupMenuButton<String>(
             onSelected: _escolhaMenuItem,

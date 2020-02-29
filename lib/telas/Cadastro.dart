@@ -9,96 +9,179 @@ class Cadastro extends StatefulWidget {
 }
 
 class _CadastroState extends State<Cadastro> {
+  TextEditingController _controllerNome = TextEditingController();
+  TextEditingController _controllerEmail = TextEditingController();
+  TextEditingController _controllerCpf = TextEditingController();
+  TextEditingController _controllerSenha = TextEditingController();
+  TextEditingController _controllerSobreNome = TextEditingController();
+  TextEditingController _controllerCelular = TextEditingController();
+  TextEditingController _controllerConfirmarSenha = TextEditingController();
 
-  TextEditingController _controllerNome = TextEditingController(text: "Jamilton Damasceno");
-  TextEditingController _controllerEmail = TextEditingController(text: "jamilton@gmail.com");
-  TextEditingController _controllerSenha = TextEditingController(text: "1234567");
   bool _tipoUsuario = false;
-  String _mensagemErro = "";
+  bool _carregando = false;
+  Usuario usuario = Usuario();
+  FirebaseAuth auth = FirebaseAuth.instance;
+  Firestore db = Firestore.instance;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  _validarCampos(){
-
-    //Recuperar dados dos campos
-    String nome = _controllerNome.text;
-    String email = _controllerEmail.text;
-    String senha = _controllerSenha.text;
-
+  _validarCampos() {
     //validar campos
-    if( nome.isNotEmpty ){
+    if (usuario.nome.isNotEmpty) {
+      print(usuario.nome);
+      if (usuario.email.isNotEmpty && usuario.email.contains("@")) {
+        if (usuario.senha.isNotEmpty && usuario.senha.length >= 6) {
+          if (usuario.senha == _controllerConfirmarSenha) {
+            usuario.tipoUsuario = usuario.verificaTipoUsuario(_tipoUsuario);
 
-      if( email.isNotEmpty && email.contains("@") ){
+            setState(() {
+              _carregando = true;
+            });
 
-        if( senha.isNotEmpty && senha.length > 6 ){
+            _cadastrarUsuario();
+            _verificarUsuarioLogado();
 
-          Usuario usuario = Usuario();
-          usuario.nome = nome;
-          usuario.email = email;
-          usuario.senha = senha;
-          usuario.tipoUsuario = usuario.verificaTipoUsuario(_tipoUsuario);
-
-          _cadastrarUsuario( usuario );
-
-        }else{
+            setState(() {
+              _carregando = false;
+            });
+          } else {
+            setState(() {
+              _scaffoldKey.currentState.showSnackBar(SnackBar(
+                content: Text(
+                  'Preencha a senha! digite mais de 5 caracteres!',
+                  style: TextStyle(fontSize: 16),
+                ),
+                backgroundColor: Colors.red,
+              ));
+            });
+          }
+        } else {
           setState(() {
-            _mensagemErro = "Preencha a senha! digite mais de 6 caracteres";
+            _scaffoldKey.currentState.showSnackBar(SnackBar(
+              content: Text(
+                'senhas não conferem!',
+                style: TextStyle(fontSize: 16),
+              ),
+              backgroundColor: Colors.red,
+            ));
+            //_mensagemErro = "Preencha o E-mail válido";
           });
         }
-
-      }else{
+      } else {
         setState(() {
-          _mensagemErro = "Preencha o E-mail válido";
+          _scaffoldKey.currentState.showSnackBar(SnackBar(
+            content: Text(
+              'Preencha o E-mail válido!',
+              style: TextStyle(fontSize: 16),
+            ),
+            backgroundColor: Colors.red,
+          ));
+          //_mensagemErro = "Preencha o E-mail válido";
         });
       }
-
-    }else{
+    } else {
       setState(() {
-        _mensagemErro = "Preencha o Nome";
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text(
+            'Preencha o Nome',
+            style: TextStyle(fontSize: 16),
+          ),
+          backgroundColor: Colors.red,
+        ));
+
+        // _mensagemErro = "Preencha o Nome";
       });
     }
-
   }
 
-  _cadastrarUsuario( Usuario usuario ){
+  _loadUser() {
+    usuario.nome = _controllerNome.text;
+    usuario.sobreNome = _controllerSobreNome.text;
+    usuario.email = _controllerEmail.text;
+    usuario.cpf = _controllerCpf.text;
+    usuario.celular = _controllerCelular.text;
+    usuario.senha = _controllerSenha.text;
+  }
 
-    FirebaseAuth auth = FirebaseAuth.instance;
-    Firestore db = Firestore.instance;
-
-    auth.createUserWithEmailAndPassword(
-        email: usuario.email,
-        password: usuario.senha
-    ).then((firebaseUser){
-
-      db.collection("usuarios")
-          .document( firebaseUser.user.uid )
-          .setData( usuario.toMap() );
+  _cadastrarUsuario() async {
+    await auth
+        .createUserWithEmailAndPassword(
+            email: usuario.email, password: usuario.senha)
+        .then((firebaseUser) {
+      usuario.idUsuario = firebaseUser.user.uid;
+      db
+          .collection("usuarios")
+          .document(firebaseUser.user.uid)
+          .setData(usuario.toMap());
 
       //redireciona para o painel, de acordo com o tipoUsuario
-      switch( usuario.tipoUsuario ){
-        case "motorista" :
-          Navigator.pushNamedAndRemoveUntil(
-              context,
-              "/painel-motorista",
-              (_) => false
-          );
-          break;
-        case "passageiro" :
-          Navigator.pushNamedAndRemoveUntil(
-              context,
-              "/painel-passageiro",
-                  (_) => false
-          );
-          break;
-      }
+      setState(() {
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text(
+            'Cadastro realizado com Sucesso! \n\n Agradecemos o seu interesse em fazer parte da nossa equipe! \n\n Aguarde a liberação no seu e-mail!',
+            style: TextStyle(fontSize: 16),
+          ),
+          backgroundColor: Colors.red,
+        ));
+      });
+      // _deslogarUsuario();
+      // Navigator.pushReplacementNamed(context, "/");
 
-    }).catchError((error){
-      _mensagemErro = "Erro ao cadastrar usuário, verifique os campos e tente novamente!";
+      /* showDialog(
+          context: context,
+          builder: (contex) {
+            return AlertDialog(
+              title: Text("Confirmação de Cadastro",
+                  style: TextStyle(color: Colors.green)),
+              content: Text(_mensagemOk),
+              contentPadding: EdgeInsets.all(16),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text(
+                    "Confirmar",
+                    style: TextStyle(color: Colors.green),
+                  ),
+                  onPressed: () {
+                    _deslogarUsuario();
+                    Navigator.pushReplacementNamed(context, "/");
+                  },
+                )
+              ],
+            );
+          });*/
+    }).catchError((error) {
+      setState(() {
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text(
+            'Erro ao cadastrar usuário, verifique os campos e tente novamente!',
+            style: TextStyle(fontSize: 16),
+          ),
+          backgroundColor: Colors.red,
+        ));
+      });
+      // _mensagemErro = "Erro ao cadastrar usuário, verifique os campos e tente novamente!";
     });
+  }
 
+  _verificarUsuarioLogado() async {
+    FirebaseUser usuarioLogado = await auth.currentUser();
+    if (usuarioLogado != null) {
+      _deslogarUsuario();
+      Navigator.pushReplacementNamed(context, "/");
+    }
+  }
+
+  _deslogarUsuario() async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+
+    await auth.signOut();
+    usuario.toMap().clear();
+    Navigator.pushReplacementNamed(context, "/");
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text("Cadastro"),
       ),
@@ -116,13 +199,47 @@ class _CadastroState extends State<Cadastro> {
                   style: TextStyle(fontSize: 20),
                   decoration: InputDecoration(
                       contentPadding: EdgeInsets.fromLTRB(32, 16, 32, 16),
-                      hintText: "Nome completo",
+                      hintText: "Nome",
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6)
-                      )
-                  ),
+                          borderRadius: BorderRadius.circular(6))),
+                ),
+                TextField(
+                  controller: _controllerSobreNome,
+                  keyboardType: TextInputType.text,
+                  style: TextStyle(fontSize: 20),
+                  decoration: InputDecoration(
+                      contentPadding: EdgeInsets.fromLTRB(32, 16, 32, 16),
+                      hintText: "Sobre Nome",
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6))),
+                ),
+                TextField(
+                  controller: _controllerCpf,
+                  keyboardType: TextInputType.text,
+                  style: TextStyle(fontSize: 20),
+                  decoration: InputDecoration(
+                      contentPadding: EdgeInsets.fromLTRB(32, 16, 32, 16),
+                      hintText: "CPF",
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6))),
+                ),
+                TextField(
+                  controller: _controllerCelular,
+                  keyboardType: TextInputType.phone,
+                  style: TextStyle(fontSize: 20),
+                  decoration: InputDecoration(
+                      contentPadding: EdgeInsets.fromLTRB(32, 16, 32, 16),
+                      hintText: "Celular",
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6))),
                 ),
                 TextField(
                   controller: _controllerEmail,
@@ -134,9 +251,7 @@ class _CadastroState extends State<Cadastro> {
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6)
-                      )
-                  ),
+                          borderRadius: BorderRadius.circular(6))),
                 ),
                 TextField(
                   controller: _controllerSenha,
@@ -149,24 +264,34 @@ class _CadastroState extends State<Cadastro> {
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6)
-                      )
-                  ),
+                          borderRadius: BorderRadius.circular(6))),
+                ),
+                TextField(
+                  controller: _controllerConfirmarSenha,
+                  obscureText: true,
+                  keyboardType: TextInputType.emailAddress,
+                  style: TextStyle(fontSize: 20),
+                  decoration: InputDecoration(
+                      contentPadding: EdgeInsets.fromLTRB(32, 16, 32, 16),
+                      hintText: "Confirmar a Senha",
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6))),
                 ),
                 Padding(
                   padding: EdgeInsets.only(bottom: 10),
                   child: Row(
                     children: <Widget>[
-                      Text("Passageiro"),
+                      Text("Restaurante"),
                       Switch(
                           value: _tipoUsuario,
-                          onChanged: (bool valor){
+                          onChanged: (bool valor) {
                             setState(() {
                               _tipoUsuario = valor;
                             });
-                          }
-                      ),
-                      Text("Motorista"),
+                          }),
+                      Text("Entregador"),
                     ],
                   ),
                 ),
@@ -179,12 +304,21 @@ class _CadastroState extends State<Cadastro> {
                       ),
                       color: Color(0xff1ebbd8),
                       padding: EdgeInsets.fromLTRB(32, 16, 32, 16),
-                      onPressed: (){
+                      onPressed: () {
+                        _loadUser();
                         _validarCampos();
-                      }
-                  ),
+                      }),
                 ),
-                Padding(
+                _carregando
+                    ? Padding(
+                        padding: EdgeInsets.only(top: 16),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            backgroundColor: Colors.white,
+                          ),
+                        ))
+                    : Container(),
+                /* Padding(
                   padding: EdgeInsets.only(top: 16),
                   child: Center(
                     child: Text(
@@ -192,7 +326,7 @@ class _CadastroState extends State<Cadastro> {
                       style: TextStyle(color: Colors.red, fontSize: 20),
                     ),
                   ),
-                )
+                )*/
               ],
             ),
           ),

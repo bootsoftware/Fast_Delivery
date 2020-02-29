@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:fast_delivery/model/Usuario.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,99 +12,163 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   TextEditingController _controllerEmail =
-      TextEditingController(text: "jamilton@gmail.com");
+      TextEditingController(text: 'wanderlei.safira@gmail.com');
   TextEditingController _controllerSenha =
-      TextEditingController(text: "1234567");
-  String _mensagemErro = "";
+      TextEditingController(text: '12345678');
+
   bool _carregando = false;
-  // bool autoFocus = false;
+
+  Usuario usuario;
+  FirebaseAuth auth = FirebaseAuth.instance;
+  Firestore db = Firestore.instance;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   _validarCampos() {
+    print('_validarCampos()');
     //Recuperar dados dos campos
-    String email = _controllerEmail.text;
-    String senha = _controllerSenha.text;
+    // usuario.toMap().clear();
+
+    usuario.email = _controllerEmail.text;
+    usuario.senha = _controllerSenha.text;
 
     //validar campos
-    if (email.isNotEmpty && email.contains("@")) {
-      if (senha.isNotEmpty && senha.length > 6) {
-        Usuario usuario = Usuario();
-        usuario.email = email;
-        usuario.senha = senha;
-
-        _logarUsuario(usuario);
+    if (usuario.email.isNotEmpty && usuario.email.contains("@")) {
+      if (usuario.senha.isNotEmpty && usuario.senha.length >= 8) {
+        //_loadUser();
+        _logarUsuario();
       } else {
         setState(() {
-          _mensagemErro = "Preencha a senha! digite mais de 6 caracteres";
+          _scaffoldKey.currentState.showSnackBar(SnackBar(
+            content: Text(
+              'Preencha a senha! digite mais de 8 caracteres',
+              style: TextStyle(fontSize: 16),
+            ),
+            backgroundColor: Colors.red,
+          ));
         });
       }
     } else {
       setState(() {
-        _mensagemErro = "Preencha o E-mail válido";
+        _carregando = false;
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text(
+            'Preencha o E-mail válido',
+            style: TextStyle(fontSize: 16),
+          ),
+          backgroundColor: Colors.red,
+        ));
       });
     }
   }
 
-  _logarUsuario(Usuario usuario) {
+  _logarUsuario() {
+    print('_logarUsuario');
+
     setState(() {
       _carregando = true;
     });
-
-    FirebaseAuth auth = FirebaseAuth.instance;
-
+    print('antes auth ' + usuario.toMap().toString());
     auth
         .signInWithEmailAndPassword(
             email: usuario.email, password: usuario.senha)
         .then((firebaseUser) {
-      _redirecionaPainelPorTipoUsuario(firebaseUser.user.uid);
+      usuario.idUsuario = firebaseUser.user.uid;
+      print('apos auth ' + usuario.toMap().toString()+'  '+firebaseUser.user.uid);
+      _loadUser();
+
+      //primeira vez ta trazendo null    ===================================
+
+      print(usuario.toMap().toString());
+
+      if (usuario.status == 2) {
+        setState(() {
+          _scaffoldKey.currentState.showSnackBar(SnackBar(
+              content: Text('Olá, ${usuario.nome}  Seja bem vindo!'),
+              backgroundColor: Colors.green));
+          _carregando = false;
+        });
+
+        _redirecionaPainelPorTipoUsuario();
+      } else {
+        setState(() {
+          _carregando = false;
+          _scaffoldKey.currentState.showSnackBar(SnackBar(
+            content: Text(
+              'Agradecemos o seu interesse em fazer parte da nossa equipe! \n\n Aguarde a liberação no seu e-mail!',
+              style: TextStyle(fontSize: 16),
+            ),
+            backgroundColor: Colors.red,
+          ));
+        });
+      }
     }).catchError((error) {
-      _mensagemErro =
-          "Erro ao autenticar usuário, verifique e-mail e senha e tente novamente!";
+      setState(() {
+        _carregando = false;
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text(
+              'Erro ao autenticar usuário, verifique e-mail e senha e tente novamente!'),
+          backgroundColor: Colors.red,
+        ));
+      });
     });
   }
 
-  _redirecionaPainelPorTipoUsuario(String idUsuario) async {
-    Firestore db = Firestore.instance;
-
+  _loadUser() async {
+    print('_loadUser()');
+    //Firestore db = Firestore.instance;
     DocumentSnapshot snapshot =
-        await db.collection("usuarios").document(idUsuario).get();
+        await db.collection("usuarios").document(usuario.idUsuario).get();
 
     Map<String, dynamic> dados = snapshot.data;
-    String tipoUsuario = dados["tipoUsuario"];
+//primeira vez ta vindo null    ===============================================================
+    usuario.idUsuario = dados["idUsuario"];
+    usuario.email = dados["email"];
+    usuario.senha = dados["senha"];
+    usuario.nome = dados["nome"];
+    usuario.status = dados["status"];
+    usuario.tipoUsuario = dados["tipoUsuario"];
+    usuario.latitude = dados["latitude"];
+    usuario.longitude = dados["longitude"];
+  }
 
+  _redirecionaPainelPorTipoUsuario() {
+    print('_redirecionaPainelPorTipoUsuario()');
+
+    switch (usuario.tipoUsuario) {
+      case "Entregador":
+        Navigator.pushReplacementNamed(context, "/painel-entregador");
+        break;
+      case "Restaurante":
+        Navigator.pushReplacementNamed(context, "/painel-restaurante");
+        break;
+    }
     setState(() {
       _carregando = false;
     });
-
-    switch (tipoUsuario) {
-      case "motorista":
-        Navigator.pushReplacementNamed(context, "/painel-motorista");
-        break;
-      case "passageiro":
-        Navigator.pushReplacementNamed(context, "/painel-passageiro");
-        break;
-    }
   }
 
   _verificarUsuarioLogado() async {
-    FirebaseAuth auth = FirebaseAuth.instance;
-
+    print('_verificarUsuarioLogado()');
     FirebaseUser usuarioLogado = await auth.currentUser();
     if (usuarioLogado != null) {
-      String idUsuario = usuarioLogado.uid;
-      _redirecionaPainelPorTipoUsuario(idUsuario);
+      usuario.idUsuario = usuarioLogado.uid;
+
+      _loadUser();
+      _redirecionaPainelPorTipoUsuario();
     }
   }
-
 
   @override
   void initState() {
     super.initState();
+    usuario = Usuario();
     _verificarUsuarioLogado();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       body: Container(
         decoration: BoxDecoration(
             image: DecorationImage(
@@ -112,88 +178,90 @@ class _HomeState extends State<Home> {
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: _buildForms(),
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.only(bottom: 32),
+                  child: Image.asset(
+                    "imagens/logo.png",
+                    width: 200,
+                    height: 150,
+                  ),
+                ),
+                TextField(
+                  controller: _controllerEmail,
+                  autofocus:
+                      false, //----------------------------------------------------------------------
+                  keyboardType: TextInputType.emailAddress,
+                  style: TextStyle(fontSize: 20),
+                  decoration: InputDecoration(
+                      contentPadding: EdgeInsets.fromLTRB(32, 16, 32, 16),
+                      hintText: "e-mail",
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6))),
+                ),
+                TextField(
+                  controller: _controllerSenha,
+                  obscureText: true,
+                  keyboardType: TextInputType.emailAddress,
+                  style: TextStyle(fontSize: 20),
+                  decoration: InputDecoration(
+                      contentPadding: EdgeInsets.fromLTRB(32, 16, 32, 16),
+                      hintText: "senha",
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6))),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top: 16, bottom: 40),
+                  child: RaisedButton(
+                      child: Text(
+                        "Entrar",
+                        style: TextStyle(color: Colors.white, fontSize: 20),
+                      ),
+                      color: Color(0xff1ebbd8),
+                      padding: EdgeInsets.fromLTRB(32, 16, 32, 16),
+                      onPressed: () {
+                        _validarCampos();
+                      }),
+                ),
+                Center(
+                  child: GestureDetector(
+                    child: Text(
+                      "Não tem conta? cadastre-se!",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    onTap: () {
+                      Navigator.pushNamed(context, "/cadastro");
+                    },
+                  ),
+                ),
+                _carregando
+                    ? Padding(
+                        padding: EdgeInsets.only(top: 16),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            backgroundColor: Colors.white,
+                          ),
+                        ))
+                    : Container(),
+
+                /* Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: Center(
+                    child: Text(
+                      _mensagemErro,
+                      style: TextStyle(color: Colors.red, fontSize: 20),
+                    ),
+                  ),
+                )*/
+              ],
             ),
           ),
         ),
       ),
     );
-  }
-
-  List<Widget> _buildForms() {
-    return [
-      Padding(
-        padding: EdgeInsets.only(bottom: 32),
-        child: Image.asset(
-          "imagens/logo.png",
-          width: 200,
-          height: 150,
-        ),
-      ),
-      TextField(
-        controller: _controllerEmail,
-        autofocus: false,
-        keyboardType: TextInputType.emailAddress,
-        style: TextStyle(fontSize: 20),
-        decoration: InputDecoration(
-            contentPadding: EdgeInsets.fromLTRB(32, 16, 32, 16),
-            hintText: "e-mail",
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6))),
-      ),
-      TextField(
-        controller: _controllerSenha,
-        obscureText: true,
-        keyboardType: TextInputType.emailAddress,
-        style: TextStyle(fontSize: 20),
-        decoration: InputDecoration(
-            contentPadding: EdgeInsets.fromLTRB(32, 16, 32, 16),
-            hintText: "senha",
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6))),
-      ),
-      Padding(
-        padding: EdgeInsets.only(top: 16, bottom: 10),
-        child: RaisedButton(
-            child: Text(
-              "Entrar",
-              style: TextStyle(color: Colors.white, fontSize: 20),
-            ),
-            color: Color(0xff1ebbd8),
-            padding: EdgeInsets.fromLTRB(32, 16, 32, 16),
-            onPressed: () {
-              _validarCampos();
-            }),
-      ),
-      Center(
-        child: GestureDetector(
-          child: Text(
-            "Não tem conta? cadastre-se!",
-            style: TextStyle(color: Colors.white),
-          ),
-          onTap: () {
-            Navigator.pushNamed(context, "/cadastro");
-          },
-        ),
-      ),
-      _carregando
-          ? Center(
-              child: CircularProgressIndicator(
-                backgroundColor: Colors.white,
-              ),
-            )
-          : Container(),
-      Padding(
-        padding: EdgeInsets.only(top: 16),
-        child: Center(
-          child: Text(
-            _mensagemErro,
-            style: TextStyle(color: Colors.red, fontSize: 20),
-          ),
-        ),
-      ),
-    ];
   }
 }

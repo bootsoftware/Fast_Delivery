@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:fast_delivery/telas/Cadastro.dart';
 import 'package:fast_delivery/telas/Corrida.dart';
 import 'package:fast_delivery/telas/Home.dart';
-import 'package:fast_delivery/telas/PainelMotorista.dart';
-import 'package:fast_delivery/telas/PainelPassageiro.dart';
+import 'package:fast_delivery/telas/PainelEntregador.dart';
+import 'package:fast_delivery/telas/PainelRestaurante.dart';
 
 class Rotas {
 
@@ -20,13 +20,13 @@ class Rotas {
         return MaterialPageRoute(
             builder: (_) => Cadastro()
         );
-      case "/painel-motorista" :
+      case "/painel-entregador" :
         return MaterialPageRoute(
-            builder: (_) => PainelMotorista()
+            builder: (_) => PainelEntregador()
         );
-      case "/painel-passageiro" :
+      case "/painel-restaurante" :
         return MaterialPageRoute(
-            builder: (_) => PainelPassageiro()
+            builder: (_) => PainelRestaurante()
         );
       case "/corrida" :
         return MaterialPageRoute(
