@@ -18,24 +18,24 @@ class _HomeState extends State<Home> {
 
   bool _carregando = false;
 
-  Usuario usuario;
+  //Usuario usuario;
   FirebaseAuth auth = FirebaseAuth.instance;
   Firestore db = Firestore.instance;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   _validarCampos() {
-    print('_validarCampos()');
     //Recuperar dados dos campos
-    // usuario.toMap().clear();
-
-    usuario.email = _controllerEmail.text;
-    usuario.senha = _controllerSenha.text;
+    String email = _controllerEmail.text;
+    String senha = _controllerSenha.text;
 
     //validar campos
-    if (usuario.email.isNotEmpty && usuario.email.contains("@")) {
-      if (usuario.senha.isNotEmpty && usuario.senha.length >= 8) {
-        //_loadUser();
-        _logarUsuario();
+    if (email.isNotEmpty && email.contains("@")) {
+      if (senha.isNotEmpty && senha.length > 5) {
+        Usuario usuario = Usuario();
+        usuario.email = email;
+        usuario.senha = senha;
+
+        _logarUsuario(usuario);
       } else {
         setState(() {
           _scaffoldKey.currentState.showSnackBar(SnackBar(
@@ -49,58 +49,32 @@ class _HomeState extends State<Home> {
       }
     } else {
       setState(() {
-        _carregando = false;
-        _scaffoldKey.currentState.showSnackBar(SnackBar(
-          content: Text(
-            'Preencha o E-mail válido',
-            style: TextStyle(fontSize: 16),
-          ),
-          backgroundColor: Colors.red,
-        ));
-      });
-    }
-  }
-
-  _logarUsuario() {
-    print('_logarUsuario');
-
-    setState(() {
-      _carregando = true;
-    });
-    print('antes auth ' + usuario.toMap().toString());
-    auth
-        .signInWithEmailAndPassword(
-            email: usuario.email, password: usuario.senha)
-        .then((firebaseUser) {
-      usuario.idUsuario = firebaseUser.user.uid;
-      print('apos auth ' + usuario.toMap().toString()+'  '+firebaseUser.user.uid);
-      _loadUser();
-
-      //primeira vez ta trazendo null    ===================================
-
-      print(usuario.toMap().toString());
-
-      if (usuario.status == 2) {
-        setState(() {
-          _scaffoldKey.currentState.showSnackBar(SnackBar(
-              content: Text('Olá, ${usuario.nome}  Seja bem vindo!'),
-              backgroundColor: Colors.green));
-          _carregando = false;
-        });
-
-        _redirecionaPainelPorTipoUsuario();
-      } else {
         setState(() {
           _carregando = false;
           _scaffoldKey.currentState.showSnackBar(SnackBar(
             content: Text(
-              'Agradecemos o seu interesse em fazer parte da nossa equipe! \n\n Aguarde a liberação no seu e-mail!',
+              'Preencha o E-mail válido',
               style: TextStyle(fontSize: 16),
             ),
             backgroundColor: Colors.red,
           ));
         });
-      }
+      });
+    }
+  }
+
+  _logarUsuario(Usuario usuario) {
+    setState(() {
+      _carregando = true;
+    });
+
+    FirebaseAuth auth = FirebaseAuth.instance;
+
+    auth
+        .signInWithEmailAndPassword(
+            email: usuario.email, password: usuario.senha)
+        .then((firebaseUser) {
+      _redirecionaPainelPorTipoUsuario(firebaseUser.user.uid);
     }).catchError((error) {
       setState(() {
         _carregando = false;
@@ -113,55 +87,64 @@ class _HomeState extends State<Home> {
     });
   }
 
-  _loadUser() async {
-    print('_loadUser()');
-    //Firestore db = Firestore.instance;
+  _redirecionaPainelPorTipoUsuario(String idUsuario) async {
+    Firestore db = Firestore.instance;
+
     DocumentSnapshot snapshot =
-        await db.collection("usuarios").document(usuario.idUsuario).get();
+        await db.collection("usuarios").document(idUsuario).get();
 
     Map<String, dynamic> dados = snapshot.data;
-//primeira vez ta vindo null    ===============================================================
-    usuario.idUsuario = dados["idUsuario"];
-    usuario.email = dados["email"];
-    usuario.senha = dados["senha"];
-    usuario.nome = dados["nome"];
-    usuario.status = dados["status"];
-    usuario.tipoUsuario = dados["tipoUsuario"];
-    usuario.latitude = dados["latitude"];
-    usuario.longitude = dados["longitude"];
-  }
+    String tipoUsuario = dados["tipoUsuario"];
+    int status = dados["status"];
 
-  _redirecionaPainelPorTipoUsuario() {
-    print('_redirecionaPainelPorTipoUsuario()');
-
-    switch (usuario.tipoUsuario) {
-      case "Entregador":
-        Navigator.pushReplacementNamed(context, "/painel-entregador");
-        break;
-      case "Restaurante":
-        Navigator.pushReplacementNamed(context, "/painel-restaurante");
-        break;
-    }
     setState(() {
       _carregando = false;
     });
+    print(dados["status"]);
+    //String s = dados["status"];
+    if (status == 2) {
+      setState(() {
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+            content: Text('Olá, ${dados["nome"]}, Seja bem vindo!'),
+            backgroundColor: Colors.green));
+        _carregando = false;
+      });
+ print(tipoUsuario);
+      switch (tipoUsuario) {
+        case "Entregador":
+          Navigator.pushReplacementNamed(context, "/painel-entregador");
+          break;
+        case "Restaurante":
+          Navigator.pushReplacementNamed(context, "/painel-restaurante");
+          break;
+      }
+    } else {
+      setState(() {
+        _carregando = false;
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text(
+            'Agradecemos o seu interesse em fazer parte da nossa equipe! \n\n Aguarde a liberação no seu e-mail!',
+            style: TextStyle(fontSize: 16),
+          ),
+          backgroundColor: Colors.red,
+        ));
+      });
+    }
   }
 
   _verificarUsuarioLogado() async {
-    print('_verificarUsuarioLogado()');
+    FirebaseAuth auth = FirebaseAuth.instance;
+
     FirebaseUser usuarioLogado = await auth.currentUser();
     if (usuarioLogado != null) {
-      usuario.idUsuario = usuarioLogado.uid;
-
-      _loadUser();
-      _redirecionaPainelPorTipoUsuario();
+      String idUsuario = usuarioLogado.uid;
+      _redirecionaPainelPorTipoUsuario(idUsuario);
     }
   }
 
   @override
   void initState() {
     super.initState();
-    usuario = Usuario();
     _verificarUsuarioLogado();
   }
 

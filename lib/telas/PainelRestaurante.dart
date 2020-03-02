@@ -21,7 +21,7 @@ class PainelRestaurante extends StatefulWidget {
 
 class _PainelRestauranteState extends State<PainelRestaurante> {
   TextEditingController _controllerDestino =
-      TextEditingController(text: "R. Heitor Penteado, 800");
+      TextEditingController(text: "quadra 104 norte rua NE 3 lote 38");
   List<String> itensMenu = ["Configurações", "Deslogar"];
   Completer<GoogleMapController> _controller = Completer();
   CameraPosition _posicaoCamera =
@@ -584,7 +584,7 @@ class _PainelRestauranteState extends State<PainelRestaurante> {
                                 width: 10,
                                 height: 10,
                                 child: Icon(
-                                  Icons.location_on,
+                                  Icons.local_pizza,
                                   color: Colors.green,
                                 ),
                               ),
@@ -617,7 +617,7 @@ class _PainelRestauranteState extends State<PainelRestaurante> {
                                 width: 10,
                                 height: 10,
                                 child: Icon(
-                                  Icons.local_taxi,
+                                  Icons.motorcycle,
                                   color: Colors.black,
                                 ),
                               ),
