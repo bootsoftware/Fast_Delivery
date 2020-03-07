@@ -31,12 +31,25 @@ class _PainelRestauranteState extends State<PainelRestaurante> {
   Position _localPassageiro;
   Map<String, dynamic> _dadosRequisicao;
   StreamSubscription<DocumentSnapshot> _streamSubscriptionRequisicoes;
+  Firestore db = Firestore.instance;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   //Controles para exibição na tela
   bool _exibirCaixaEnderecoDestino = true;
   String _textoBotao = "Chamar Entregador";
   Color _corBotao = Color(0xff1ebbd8);
   Function _funcaoBotao;
+
+  _bemVindo() async {
+    DocumentSnapshot user;
+    FirebaseUser firebaseUser = await UsuarioFirebase.getUsuarioAtual();
+    user = await db.collection("usuarios").document(firebaseUser.uid).get();
+    setState(() {
+      _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text('Olá, ${user["nome"]}, Seja bem vindo!'),
+          backgroundColor: Colors.green));
+    });
+  }
 
   _deslogarUsuario() async {
     FirebaseAuth auth = FirebaseAuth.instance;
@@ -521,9 +534,9 @@ class _PainelRestauranteState extends State<PainelRestaurante> {
   void initState() {
     super.initState();
 
+    _bemVindo();
     //adicionar listener para requisicao ativa
     _recuperaRequisicaoAtiva();
-
     //_recuperaUltimaLocalizacaoConhecida();
     _adicionarListenerLocalizacao();
   }
@@ -531,6 +544,7 @@ class _PainelRestauranteState extends State<PainelRestaurante> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text("Painel Restaurante"),
         actions: <Widget>[
@@ -652,6 +666,14 @@ class _PainelRestauranteState extends State<PainelRestaurante> {
             )
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, "/painel-entregas",
+              arguments: '37Nmc2g483zjmGEv2hsV');
+        },
+        child: Icon(Icons.navigation),
+        backgroundColor: Colors.green,
       ),
     );
   }

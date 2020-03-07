@@ -103,16 +103,15 @@ class _HomeState extends State<Home> {
     print(dados["status"]);
     //String s = dados["status"];
     if (status == 2) {
-      setState(() {
-        _scaffoldKey.currentState.showSnackBar(SnackBar(
-            content: Text('Olá, ${dados["nome"]}, Seja bem vindo!'),
-            backgroundColor: Colors.green));
-        _carregando = false;
-      });
- print(tipoUsuario);
       switch (tipoUsuario) {
         case "Entregador":
           Navigator.pushReplacementNamed(context, "/painel-entregador");
+        /*  setState(() {
+            _scaffoldKey.currentState.showSnackBar(SnackBar(
+                content: Text('Olá, ${dados["nome"]}, Seja bem vindo!'),
+                backgroundColor: Colors.green));
+            _carregando = false;
+          }); */
           break;
         case "Restaurante":
           Navigator.pushReplacementNamed(context, "/painel-restaurante");
@@ -230,16 +229,6 @@ class _HomeState extends State<Home> {
                           ),
                         ))
                     : Container(),
-
-                /* Padding(
-                  padding: EdgeInsets.only(top: 16),
-                  child: Center(
-                    child: Text(
-                      _mensagemErro,
-                      style: TextStyle(color: Colors.red, fontSize: 20),
-                    ),
-                  ),
-                )*/
               ],
             ),
           ),

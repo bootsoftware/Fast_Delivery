@@ -6,17 +6,34 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fast_delivery/util/StatusRequisicao.dart';
 import 'package:fast_delivery/util/UsuarioFirebase.dart';
 
-class PainelEntregador extends StatefulWidget {
+class PainelEntregas extends StatefulWidget {
+  String idRequisicao;
+
+  PainelEntregas(this.idRequisicao);
   @override
-  _PainelEntregadorState createState() => _PainelEntregadorState();
+  _PainelEntregasState createState() => _PainelEntregasState();
 }
 
-class _PainelEntregadorState extends State<PainelEntregador> {
+class _PainelEntregasState extends State<PainelEntregas> {
   List<String> itensMenu = ["Configurações", "Deslogar"];
   final _controller = StreamController<QuerySnapshot>.broadcast();
   Firestore db = Firestore.instance;
+  String idUsuarioLogado = '';
 
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  var mensagemCarregando = Center(
+    child: Column(
+      children: <Widget>[
+        Text("Carregando requisições"),
+        CircularProgressIndicator()
+      ],
+    ),
+  );
+  var mensagemNaoTemDados = Center(
+    child: Text(
+      "Você não tem nenhuma requisição :( ",
+      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    ),
+  );
 
   _deslogarUsuario() async {
     FirebaseAuth auth = FirebaseAuth.instance;
@@ -35,21 +52,107 @@ class _PainelEntregadorState extends State<PainelEntregador> {
     }
   }
 
-  Stream<QuerySnapshot> _adicionarListenerRequisicoes() {
-    final stream = db
+  Future<Stream<QuerySnapshot>> _adicionarListenerRequisicoes() async {
+    /* QuerySnapshot snapshot = await db
         .collection("requisicoes")
-        .where("status", isEqualTo: StatusRequisicao.AGUARDANDO)
+        //.where("status", isEqualTo: StatusRequisicao.AGUARDANDO)
+        .getDocuments();
+    snapshot.documents.forEach((dado) {
+      if (dado.data["passageiro"]["idUsuario"].toString() == idUsuarioLogado) {}
+      print(dado.data["passageiro"]["nome"]);
+      //  String nomePassageiro = item["passageiro"]["nome"];
+
+      //print(dado.data);
+    });
+*/
+    final stream = await db
+        .collection("requisicoes")
+        //.where("status", isEqualTo: StatusRequisicao.AGUARDANDO)
+        .where("passageiro""idUsuario" , isEqualTo: idUsuarioLogado)
         .snapshots();
 
-    stream.listen((dados) {
-      _controller.add(dados);
+    stream.forEach((documentos) {
+      documentos.documents.forEach((documento) {
+        print(documento.data);
+      });
+
     });
+
+////////////////////ERROOOO
+    QuerySnapshot dadoss;
+    stream.listen((dados) {
+      dados.documents.forEach((dado) {
+        if (dado.data["passageiro"]["idUsuario"].toString() ==
+            idUsuarioLogado) {
+          print(dado.data["passageiro"]["idUsuario"].toString());
+          print(dado.data["passageiro"]["nome"].toString());
+          print('id : ' + idUsuarioLogado);
+          print('antes');
+          dadoss.documents.add(dado);
+          print('dados : ' + dadoss.toString());
+        }
+      });
+
+      _controller.add(dadoss);
+      print('dados : ' + dadoss.toString());
+    });
+
+    StreamBuilder<QuerySnapshot>(
+        stream: _controller.stream,
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.none:
+            case ConnectionState.waiting:
+              return mensagemCarregando;
+              break;
+            case ConnectionState.active:
+            case ConnectionState.done:
+              if (snapshot.hasError) {
+                return Text("Erro ao carregar os dados!");
+              } else {
+                QuerySnapshot querySnapshot = snapshot.data;
+                if (querySnapshot.documents.length == 0) {
+                  return mensagemNaoTemDados;
+                } else {
+                  return ListView.separated(
+                      itemCount: querySnapshot.documents.length,
+                      separatorBuilder: (context, indice) => Divider(
+                            height: 2,
+                            color: Colors.grey,
+                          ),
+                      itemBuilder: (context, indice) {
+                        List<DocumentSnapshot> requisicoes =
+                            querySnapshot.documents.toList();
+
+                        DocumentSnapshot item = requisicoes[indice];
+
+                        String idRequisicao = item["id"];
+                        String nomePassageiro = item["motorista"]["nome"];
+                        String rua = item["destino"]["rua"];
+                        String numero = item["destino"]["numero"];
+
+                        return ListTile(
+                          title: Text(nomePassageiro),
+                          subtitle: Text("destino: $rua, $numero"),
+                          onTap: () {
+                            Navigator.pushNamed(context, "/corrida",
+                                arguments: idRequisicao);
+                          },
+                        );
+                      });
+                }
+              }
+
+              break;
+          }
+        });
   }
 
   _recuperaRequisicaoAtivaMotorista() async {
     //Recupera dados do usuario logado
-
     FirebaseUser firebaseUser = await UsuarioFirebase.getUsuarioAtual();
+    idUsuarioLogado = firebaseUser.uid;
+    // print(idUsuarioLogado);
 
     //Recupera requisicao ativa
     DocumentSnapshot documentSnapshot = await db
@@ -59,30 +162,19 @@ class _PainelEntregadorState extends State<PainelEntregador> {
 
     var dadosRequisicao = documentSnapshot.data;
 
-    if (dadosRequisicao == null) {
-      _adicionarListenerRequisicoes();
-    } else {
+    // if (dadosRequisicao == null) {
+    _adicionarListenerRequisicoes();
+    /*  } else {
       String idRequisicao = dadosRequisicao["id_requisicao"];
       Navigator.pushReplacementNamed(context, "/corrida",
           arguments: idRequisicao);
-    }
-  }
-
-  _bemVindo() async {
-    DocumentSnapshot user;
-    FirebaseUser firebaseUser = await UsuarioFirebase.getUsuarioAtual();
-    user = await db.collection("usuarios").document(firebaseUser.uid).get();
-    setState(() {
-      _scaffoldKey.currentState.showSnackBar(SnackBar(
-          content: Text('Olá, ${user["nome"]}, Seja bem vindo!'),
-          backgroundColor: Colors.green));
-    });
+    }*/
   }
 
   @override
   void initState() {
     super.initState();
-    _bemVindo();
+
     /*
     Recupera requisicao ativa para verificar se motorista está
     atendendo alguma requisição e envia ele para tela de corrida
@@ -109,7 +201,6 @@ class _PainelEntregadorState extends State<PainelEntregador> {
     );
 
     return Scaffold(
-      key: _scaffoldKey,
       appBar: AppBar(
         title: Text("Painel Entregador"),
         actions: <Widget>[

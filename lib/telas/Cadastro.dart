@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fast_delivery/model/Usuario.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 
 class Cadastro extends StatefulWidget {
   @override
@@ -27,10 +28,9 @@ class _CadastroState extends State<Cadastro> {
   _validarCampos() {
     //validar campos
     if (usuario.nome.isNotEmpty) {
-      print(usuario.nome);
       if (usuario.email.isNotEmpty && usuario.email.contains("@")) {
         if (usuario.senha.isNotEmpty && usuario.senha.length >= 6) {
-          if (usuario.senha == _controllerConfirmarSenha) {
+          if (usuario.senha == _controllerConfirmarSenha.text) {
             usuario.tipoUsuario = usuario.verificaTipoUsuario(_tipoUsuario);
 
             setState(() {
@@ -63,7 +63,6 @@ class _CadastroState extends State<Cadastro> {
               ),
               backgroundColor: Colors.red,
             ));
-            //_mensagemErro = "Preencha o E-mail válido";
           });
         }
       } else {
@@ -75,7 +74,6 @@ class _CadastroState extends State<Cadastro> {
             ),
             backgroundColor: Colors.red,
           ));
-          //_mensagemErro = "Preencha o E-mail válido";
         });
       }
     } else {
@@ -87,8 +85,6 @@ class _CadastroState extends State<Cadastro> {
           ),
           backgroundColor: Colors.red,
         ));
-
-        // _mensagemErro = "Preencha o Nome";
       });
     }
   }
@@ -113,7 +109,6 @@ class _CadastroState extends State<Cadastro> {
           .document(firebaseUser.user.uid)
           .setData(usuario.toMap());
 
-      //redireciona para o painel, de acordo com o tipoUsuario
       setState(() {
         _scaffoldKey.currentState.showSnackBar(SnackBar(
           content: Text(
@@ -123,32 +118,9 @@ class _CadastroState extends State<Cadastro> {
           backgroundColor: Colors.red,
         ));
       });
-      // _deslogarUsuario();
-      // Navigator.pushReplacementNamed(context, "/");
-
-      /* showDialog(
-          context: context,
-          builder: (contex) {
-            return AlertDialog(
-              title: Text("Confirmação de Cadastro",
-                  style: TextStyle(color: Colors.green)),
-              content: Text(_mensagemOk),
-              contentPadding: EdgeInsets.all(16),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text(
-                    "Confirmar",
-                    style: TextStyle(color: Colors.green),
-                  ),
-                  onPressed: () {
-                    _deslogarUsuario();
-                    Navigator.pushReplacementNamed(context, "/");
-                  },
-                )
-              ],
-            );
-          });*/
-    }).catchError((error) {
+      _deslogarUsuario();
+    }).catchError((erro) {
+      // print('ERRO - ' + erro.toString());////////////////////////////////////////////////////////
       setState(() {
         _scaffoldKey.currentState.showSnackBar(SnackBar(
           content: Text(
@@ -158,24 +130,24 @@ class _CadastroState extends State<Cadastro> {
           backgroundColor: Colors.red,
         ));
       });
-      // _mensagemErro = "Erro ao cadastrar usuário, verifique os campos e tente novamente!";
     });
   }
 
-  _verificarUsuarioLogado() async {
+  Future<bool> _verificarUsuarioLogado() async {
     FirebaseUser usuarioLogado = await auth.currentUser();
     if (usuarioLogado != null) {
-      _deslogarUsuario();
-      Navigator.pushReplacementNamed(context, "/");
+      return true;
+    } else {
+      return false;
     }
   }
 
   _deslogarUsuario() async {
-    FirebaseAuth auth = FirebaseAuth.instance;
-
-    await auth.signOut();
+    if (_verificarUsuarioLogado() == true) {
+      await auth.signOut();
+      usuario.toMap().clear();
+    }
     usuario.toMap().clear();
-    Navigator.pushReplacementNamed(context, "/");
   }
 
   @override

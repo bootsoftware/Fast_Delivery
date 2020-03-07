@@ -22,8 +22,7 @@ class Corrida extends StatefulWidget {
 
 class _CorridaState extends State<Corrida> {
   Completer<GoogleMapController> _controller = Completer();
-  CameraPosition _posicaoCamera =
-      CameraPosition(target: LatLng(-23.563999, -46.653256));
+  CameraPosition _posicaoCamera = CameraPosition(target: LatLng(-23.563999, -46.653256));
   Set<Marker> _marcadores = {};
   Map<String, dynamic> _dadosRequisicao;
   String _idRequisicao;
@@ -247,7 +246,7 @@ class _CorridaState extends State<Corrida> {
 
     double distanciaEmMetros = await Geolocator().distanceBetween(
         latitudeOrigem, longitudeOrigem, latitudeDestino, longitudeDestino);
-   /*
+    /*
     //Converte para KM
     double distanciaKm = distanciaEmMetros / 1000;
 
@@ -272,7 +271,8 @@ class _CorridaState extends State<Corrida> {
     _valorViagem = _valorDistancia * _valorDinamico;
     if (_valorViagem < _valorMinimo) {
       _valorViagem = _valorMinimo;
-    };
+    }
+    ;
 
     //Formatar Numeros
     var f = new NumberFormat("#,##0.00", "pt_BR");
@@ -458,12 +458,10 @@ class _CorridaState extends State<Corrida> {
     super.initState();
 
     _idRequisicao = widget.idRequisicao;
-
-    // adicionar listener para mudanças na requisicao
-    _adicionarListenerRequisicao();
-
     //_recuperaUltimaLocalizacaoConhecida();
     _adicionarListenerLocalizacao();
+    // adicionar listener para mudanças na requisicao
+    _adicionarListenerRequisicao();
   }
 
   @override

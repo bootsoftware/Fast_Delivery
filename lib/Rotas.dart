@@ -4,6 +4,7 @@ import 'package:fast_delivery/telas/Corrida.dart';
 import 'package:fast_delivery/telas/Home.dart';
 import 'package:fast_delivery/telas/PainelEntregador.dart';
 import 'package:fast_delivery/telas/PainelRestaurante.dart';
+import 'package:fast_delivery/telas/PainelEntregas.dart';
 
 class Rotas {
 
@@ -34,6 +35,14 @@ class Rotas {
                 args
             )
         );
+           case "/painel-entregas" :
+        return MaterialPageRoute(
+            builder: (_) => PainelEntregas(
+                args
+            )
+        );
+
+        
       default:
         _erroRota();
     }
