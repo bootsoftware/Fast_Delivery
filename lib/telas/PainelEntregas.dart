@@ -53,48 +53,13 @@ class _PainelEntregasState extends State<PainelEntregas> {
   }
 
   Future<Stream<QuerySnapshot>> _adicionarListenerRequisicoes() async {
-    /* QuerySnapshot snapshot = await db
-        .collection("requisicoes")
-        //.where("status", isEqualTo: StatusRequisicao.AGUARDANDO)
-        .getDocuments();
-    snapshot.documents.forEach((dado) {
-      if (dado.data["passageiro"]["idUsuario"].toString() == idUsuarioLogado) {}
-      print(dado.data["passageiro"]["nome"]);
-      //  String nomePassageiro = item["passageiro"]["nome"];
-
-      //print(dado.data);
-    });
-*/
     final stream = await db
         .collection("requisicoes")
-        //.where("status", isEqualTo: StatusRequisicao.AGUARDANDO)
-        .where("passageiro""idUsuario" , isEqualTo: idUsuarioLogado)
+        .where("passageiro.idUsuario", isEqualTo: idUsuarioLogado)
         .snapshots();
 
-    stream.forEach((documentos) {
-      documentos.documents.forEach((documento) {
-        print(documento.data);
-      });
-
-    });
-
-////////////////////ERROOOO
-    QuerySnapshot dadoss;
     stream.listen((dados) {
-      dados.documents.forEach((dado) {
-        if (dado.data["passageiro"]["idUsuario"].toString() ==
-            idUsuarioLogado) {
-          print(dado.data["passageiro"]["idUsuario"].toString());
-          print(dado.data["passageiro"]["nome"].toString());
-          print('id : ' + idUsuarioLogado);
-          print('antes');
-          dadoss.documents.add(dado);
-          print('dados : ' + dadoss.toString());
-        }
-      });
-
-      _controller.add(dadoss);
-      print('dados : ' + dadoss.toString());
+      _controller.add(dados);
     });
 
     StreamBuilder<QuerySnapshot>(

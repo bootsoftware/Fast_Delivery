@@ -8,6 +8,8 @@ class Usuario {
   String _senha;
   String _tipoUsuario;
   int _status;
+  double _valorReceber;
+  double _valorRecebido;
 
   double _latitude;
   double _longitude;
@@ -29,11 +31,13 @@ class Usuario {
       "email": this.email ??= '',
       "cpf": this.cpf ??= '',
       "tipoUsuario": this.tipoUsuario ??= '',
+      "valorReceber": this.valorReceber ??= 0.0,
+      "valorRecebido": this.valorRecebido ??= 0.0,
       "status": this.status ??= 1,
       "latitude": this.latitude ??= 0.0,
-      "longitude": this.longitude ??= 0.0,      
+      "longitude": this.longitude ??= 0.0,
     };
-   // print(map.toString());
+    // print(map.toString());
 
     return map;
   }
@@ -100,5 +104,17 @@ class Usuario {
 
   set longitude(double value) {
     _longitude = value;
+  }
+
+  double get valorReceber => _valorReceber;
+
+  set valorReceber(double value) {
+    _valorReceber = value;
+  }
+
+  double get valorRecebido => _valorRecebido;
+
+  set valorRecebido(double value) {
+    _valorRecebido = value;
   }
 }

@@ -22,7 +22,8 @@ class Corrida extends StatefulWidget {
 
 class _CorridaState extends State<Corrida> {
   Completer<GoogleMapController> _controller = Completer();
-  CameraPosition _posicaoCamera = CameraPosition(target: LatLng(-23.563999, -46.653256));
+  CameraPosition _posicaoCamera =
+      CameraPosition(target: LatLng(-10.182945, -48.348177));
   Set<Marker> _marcadores = {};
   Map<String, dynamic> _dadosRequisicao;
   String _idRequisicao;
@@ -84,6 +85,7 @@ class _CorridaState extends State<Corrida> {
 
     if (position != null) {
       //Atualizar localização em tempo real do motorista
+      // _localMotorista = position;
 
     }
   }

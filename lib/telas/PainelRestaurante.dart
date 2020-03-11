@@ -34,6 +34,13 @@ class _PainelRestauranteState extends State<PainelRestaurante> {
   Firestore db = Firestore.instance;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  double _distanciaKm = 0.00;
+  double _valorDistancia = 0.00;
+  double _valorDinamico = 1;
+  double _valorMetroRodado = 0.001663333333333;
+  double _valorViagem = 0.00;
+  double _valorMinimo = 4.99;
+
   //Controles para exibição na tela
   bool _exibirCaixaEnderecoDestino = true;
   String _textoBotao = "Chamar Entregador";
@@ -374,11 +381,17 @@ class _PainelRestauranteState extends State<PainelRestaurante> {
     double distanciaKm = distanciaEmMetros / 1000;
 
     //8 é o valor cobrado por KM
-    double valorViagem = distanciaKm * 8;
+    //  double valorViagem = distanciaKm * 8;
+
+    _valorDistancia = distanciaEmMetros * _valorMetroRodado;
+    _valorViagem = _valorDistancia * _valorDinamico;
+    if (_valorViagem < _valorMinimo) {
+      _valorViagem = _valorMinimo;
+    }
 
     //Formatar valor viagem
     var f = new NumberFormat("#,##0.00", "pt_BR");
-    var valorViagemFormatado = f.format(valorViagem);
+    var valorViagemFormatado = f.format(_valorViagem);
 
     _alterarBotaoPrincipal(
         "Total - R\$ ${valorViagemFormatado}", Colors.green, () {});
