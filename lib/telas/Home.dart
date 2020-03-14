@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:fast_delivery/core/controller/financeiroController.dart';
+import 'package:fast_delivery/core/model/financeiroModel.dart';
 import 'package:flutter/material.dart';
-import 'package:fast_delivery/model/Usuario.dart';
+import 'package:fast_delivery/core/model/Usuario.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -24,6 +26,18 @@ class _HomeState extends State<Home> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   _validarCampos() {
+
+ FinanceiroController f = FinanceiroController();
+//f.createFinanceiro(formaPagamento: 'teste');
+f.carregarDados("NNbclpeNVN5iVZRUv3fz");
+
+
+
+/*
+
+
+
+
     //Recuperar dados dos campos
     String email = _controllerEmail.text;
     String senha = _controllerSenha.text;
@@ -61,6 +75,10 @@ class _HomeState extends State<Home> {
         });
       });
     }
+//teste 
+
+*/
+
   }
 
   _logarUsuario(Usuario usuario) {

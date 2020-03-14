@@ -7,10 +7,10 @@ import 'package:intl/intl.dart';
 import 'dart:async';
 import 'dart:io';
 
-import 'package:fast_delivery/model/Destino.dart';
-import 'package:fast_delivery/model/Marcador.dart';
-import 'package:fast_delivery/model/Requisicao.dart';
-import 'package:fast_delivery/model/Usuario.dart';
+import 'package:fast_delivery/core/model/Destino.dart';
+import 'package:fast_delivery/core/model/Marcador.dart';
+import 'package:fast_delivery/core/model/Requisicao.dart';
+import 'package:fast_delivery/core/model/Usuario.dart';
 import 'package:fast_delivery/util/StatusRequisicao.dart';
 import 'package:fast_delivery/util/UsuarioFirebase.dart';
 

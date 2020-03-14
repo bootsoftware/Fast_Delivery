@@ -92,7 +92,7 @@ class _PainelEntregasState extends State<PainelEntregas> {
                         DocumentSnapshot item = requisicoes[indice];
 
                         String idRequisicao = item["id"];
-                        String nomePassageiro = item["motorista"]["nome"];
+                        String nomePassageiro = item["passageiro"]["nome"];
                         String rua = item["destino"]["rua"];
                         String numero = item["destino"]["numero"];
 
